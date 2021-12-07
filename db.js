@@ -3,3 +3,4 @@ mongoose.connect("mongodb+srv://sdev255:myclass2021@cluster0.oxluk.mongodb.net/m
     {useNewUrlParser: true});
 
 module.exports = mongoose;
+
