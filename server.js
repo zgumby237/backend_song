@@ -2,12 +2,81 @@ const express = require("express");
 const bodyParser = require('body-parser');
 const Song = require("./models/song");
 var cors = require('cors');
+const jwt = require("jwt-simple");
+const User = require("./models/user")
 
 const app = express();
 app.use(cors());
 
 app.use(bodyParser.json());
 const router = express.Router();
+
+const secret = "supersecret"
+
+//create a new username and password
+router.post("/user", function(req, res) {
+
+    if (!req.body.username || !req.body.password) {
+       res.status(400).json({ error: "Missing username and/or password"});
+       return;
+    }
+ 
+    const newUser = new User({
+       username: req.body.username,
+       password: req.body.password,
+       status:   req.body.status
+    });
+ 
+    newUser.save(function(err) {
+       if (err) {
+          res.status(400).send(err);
+       }
+       else {
+          res.sendStatus(201);  // Created
+       }
+    });
+ });
+
+
+//authentication
+router.post("/auth", function(req,res){
+    if (!req.body.username || !req.body.password) {
+        res.status(400).json({ error: "Missing username and/or password"});
+        return;
+     }
+
+    User.findOne({username: req.body.username}, function(err,user){
+        //connection or server err
+        if(err){
+            res.status(400).send(err)
+        }
+        //checks to see if user is in database
+        else if(!user){
+            res.status(401).json({error:"Bad Username"})
+        }
+        //checks to see is the users password is correct
+        else{
+            if(user.password != req.body.password){
+                res.status(401).json({error:"Bad Password"})
+            }
+            //succesful login
+            else{
+                //create a token that is encoded with jwt that sends back the username encoded
+                username2 = user.username
+                const token = jwt.encode({username: user.username},secret)
+
+                //respond with a token with the value of the token constant above
+                res.json({
+                    username2,
+                    token:token})
+
+            }
+        }
+    })
+
+
+})
+
 
 //Grab all songs in the database
 router.get("/songs", function(req,res){
